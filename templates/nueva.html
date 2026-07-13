@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Capacitación</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a { color: white; text-decoration: none; margin-left: 20px; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 40px;
+        }
+        .form-card h1 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .form-card p.subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-group input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .file-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-submit:hover { transform: translateY(-2px); }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .alert-error { background: #fee; color: #c33; border: 1px solid #fcc; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🎓 Sistema de Capacitaciones</h1>
+        <div>
+            <a href="/dashboard">← Volver al Dashboard</a>
+            <a href="/informes">📅 Informes por Período</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h1>📤 Procesar Nueva Capacitación</h1>
+            <p class="subtitle">Subí los archivos Excel y completá los datos para generar el informe automático.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Nombre de la capacitación</label>
+                    <input type="text" name="nombre" placeholder="Ej: SEMINARIO: CÓMO PONER PRECIO..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha de realización</label>
+                    <input type="date" name="fecha_realizacion" required>
+                    <p class="file-info">Se usa para agrupar esta capacitación en los informes trimestrales/semestrales</p>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Inscriptos</label>
+                        <input type="number" name="inscriptos" placeholder="71" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Matriculados</label>
+                        <input type="number" name="matriculados" placeholder="60" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Certificados</label>
+                        <input type="number" name="certificados" placeholder="29" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Archivo de INSCRIPTOS (respuesta del formulario Google)</label>
+                    <input type="file" name="file_inscriptos" accept=".xlsx,.xls" required>
+                    <p class="file-info">Pestaña con los datos de inscriptos del formulario</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Archivo de MATRICULADOS/CERTIFICADOS</label>
+                    <input type="file" name="file_matriculados" accept=".xlsx,.xls" required>
+                    <p class="file-info">Pestaña con tabla izquierda=matriculados, derecha=certificados</p>
+                </div>
+
+                <button type="submit" class="btn-submit">🚀 Procesar Capacitación</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

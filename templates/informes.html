@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informes por Período</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a { color: white; text-decoration: none; margin-left: 20px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 30px; }
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 40px;
+            margin-bottom: 25px;
+        }
+        .form-card h1 { margin-bottom: 10px; color: #333; }
+        .form-card p.subtitle { color: #666; margin-bottom: 30px; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-submit:hover { transform: translateY(-2px); }
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .alert-error { background: #fee; color: #c33; border: 1px solid #fcc; }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 14px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-right: 15px;
+            margin-top: 10px;
+        }
+        .btn-excel { background: #e8f5e9; color: #2e7d32; }
+        .btn-word { background: #e3f2fd; color: #1976d2; }
+        .info-box { font-size: 13px; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🎓 Sistema de Capacitaciones</h1>
+        <div>
+            <a href="/dashboard">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h1>📅 Informes por Período</h1>
+            <p class="subtitle">Consolidá todas las capacitaciones de un trimestre, semestre o año en un solo informe Excel + Word.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" id="formInforme">
+                <div class="form-group">
+                    <label>Tipo de informe</label>
+                    <select name="tipo" id="tipoSelect" onchange="actualizarPeriodos()" required>
+                        <option value="trimestral">Trimestral</option>
+                        <option value="semestral">Semestral</option>
+                        <option value="anual">Anual</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Período</label>
+                    <select name="periodo" id="periodoSelect" required></select>
+                    <p class="info-box">Solo aparecen los períodos que tienen capacitaciones cargadas</p>
+                </div>
+
+                <button type="submit" class="btn-submit">📊 Generar Informe Consolidado</button>
+            </form>
+        </div>
+
+        {% if resultado %}
+        <div class="form-card">
+            <h1>✅ Informe generado</h1>
+            <p class="subtitle">Período {{ resultado.periodo }} — {{ resultado.cantidad }} capacitación(es) incluidas</p>
+            <a href="/descargar/excel/{{ resultado.excel }}" class="download-btn btn-excel">📊 Descargar Excel</a>
+            <a href="/descargar/word/{{ resultado.word }}" class="download-btn btn-word">📝 Descargar Informe Word</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        const periodos = {
+            trimestral: {{ periodos.trimestral|tojson }},
+            semestral: {{ periodos.semestral|tojson }},
+            anual: {{ periodos.anual|tojson }}
+        };
+
+        function actualizarPeriodos() {
+            const tipo = document.getElementById('tipoSelect').value;
+            const select = document.getElementById('periodoSelect');
+            select.innerHTML = '';
+            periodos[tipo].forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                select.appendChild(opt);
+            });
+            if (periodos[tipo].length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'No hay capacitaciones cargadas aún';
+                select.appendChild(opt);
+            }
+        }
+        actualizarPeriodos();
+    </script>
+</body>
+</html>
