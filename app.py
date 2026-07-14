@@ -113,7 +113,7 @@ def procesar_capacitacion(filepath_inscriptos, filepath_mat_cert, nombre_cap, in
     """Procesa una capacitación completa y genera Excel + Word."""
 
     # Leer inscriptos
-    df_inscriptos_raw = pd.read_excel(filepath_inscriptos, header=None)
+    df_inscriptos_raw = pd.read_excel(filepath_inscriptos, header=None, engine='openpyxl', engine_kwargs={'read_only': True})
     df_ins = df_inscriptos_raw.copy()
     df_ins.columns = ['fecha_inscripcion', 'email', 'capacitaciones', 'nombre', 'apellido', 
                       'rango_edad', 'fecha_nac', 'dni', 'cuil', 'genero', 'calle', 'numero',
@@ -132,7 +132,7 @@ def procesar_capacitacion(filepath_inscriptos, filepath_mat_cert, nombre_cap, in
     df_ins['apellido'] = df_ins['apellido'].str.strip()
 
     # Leer matriculados/certificados
-    df_mat_cert_raw = pd.read_excel(filepath_mat_cert, sheet_name='MATRICULADOCERTIFICADO', header=None)
+    df_mat_cert_raw = pd.read_excel(filepath_mat_cert, sheet_name='MATRICULADOCERTIFICADO', header=None, engine='openpyxl', engine_kwargs={'read_only': True})
 
     # Extraer matriculados
     df_mat = df_mat_cert_raw.iloc[7:, [0, 1, 2, 3, 4, 5]].copy()
@@ -297,29 +297,33 @@ def generar_informe_periodo(caps, periodo_label, tipo, word_path, excel_path):
 
     # Gráfico evolución por capacitación
     doc.add_heading('3. EVOLUCIÓN DE INSCRIPTOS POR CAPACITACIÓN', level=1)
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(7, 3.8))
     ax.bar(detalle['Capacitación'], detalle['Inscriptos'], color='#2E75B6')
     ax.set_ylabel('Inscriptos')
     ax.set_title(f'Inscriptos por capacitación — {periodo_label}')
     plt.xticks(rotation=30, ha='right')
     plt.tight_layout()
     graf1 = os.path.join(GENERATED_FOLDER, 'temp_graf_periodo1.png')
-    fig.savefig(graf1, dpi=150, bbox_inches='tight')
+    fig.savefig(graf1, dpi=90, bbox_inches='tight')
     plt.close(fig)
+    plt.close('all')
+    gc.collect()
     doc.add_picture(graf1, width=Inches(5.8))
     doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Gráfico geográfico consolidado
     if not df_geo.empty:
         doc.add_heading('4. DISTRIBUCIÓN GEOGRÁFICA CONSOLIDADA', level=1)
-        fig2, ax2 = plt.subplots(figsize=(10, 6))
+        fig2, ax2 = plt.subplots(figsize=(7, 4.2))
         ax2.barh(df_geo['Partido'], df_geo['inscriptos'], color='#70AD47')
         ax2.set_xlabel('Inscriptos')
         ax2.set_title(f'Distribución geográfica consolidada — {periodo_label}')
         plt.tight_layout()
         graf2 = os.path.join(GENERATED_FOLDER, 'temp_graf_periodo2.png')
-        fig2.savefig(graf2, dpi=150, bbox_inches='tight')
+        fig2.savefig(graf2, dpi=90, bbox_inches='tight')
         plt.close(fig2)
+        plt.close('all')
+        gc.collect()
         doc.add_picture(graf2, width=Inches(5.8))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         os.remove(graf2)
@@ -365,7 +369,7 @@ def generar_word(df_ins, df_mat, df_cert, resumen, nombre_cap, word_path):
     doc.add_heading('2. DISTRIBUCIÓN GEOGRÁFICA', level=1)
 
     resumen_graf = resumen[resumen['partido'] != 'TOTAL'].copy()
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(7, 4.2))
     colores = ['#2E75B6', '#70AD47', '#FFC000', '#ED7D31', '#5B9BD5']
     bars = ax.barh(resumen_graf['partido'], resumen_graf['inscriptos'], color=colores[:len(resumen_graf)])
     ax.set_xlabel('Cantidad de Inscriptos')
@@ -569,6 +573,17 @@ def descargar(tipo, filename):
         return send_file(filepath, as_attachment=True)
     flash('Archivo no encontrado', 'error')
     return redirect(url_for('dashboard'))
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("SISTEMA DE GESTIÓN DE CAPACITACIONES")
+    print("=" * 60)
+    print("Abriendo en: http://127.0.0.1:5000")
+    print("Usuario: admin")
+    print("Contraseña: admin123")
+    print("=" * 60)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     print("=" * 60)
