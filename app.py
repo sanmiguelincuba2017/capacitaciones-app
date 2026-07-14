@@ -1,6 +1,11 @@
 import os
+os.environ.setdefault('OMP_NUM_THREADS', '1')
+os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
+os.environ.setdefault('MKL_NUM_THREADS', '1')
+
 import pandas as pd
 import numpy as np
+import gc
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
 from werkzeug.utils import secure_filename
@@ -196,7 +201,7 @@ def procesar_capacitacion(filepath_inscriptos, filepath_mat_cert, nombre_cap, in
     word_path = os.path.join(GENERATED_FOLDER, word_name)
     generar_word(df_ins, df_mat, df_cert, resumen, nombre_cap, word_path)
 
-    return {
+    resultado_final = {
         'excel': excel_name,
         'word': word_name,
         'inscriptos': len(df_ins),
@@ -204,6 +209,9 @@ def procesar_capacitacion(filepath_inscriptos, filepath_mat_cert, nombre_cap, in
         'certificados': (df_mat['certificado'] == 'Sí').sum(),
         'resumen': resumen.to_dict('records')
     }
+    del df_ins, df_mat, df_cert, df_inscriptos_raw, df_mat_cert_raw, df_ins_con_mat
+    gc.collect()
+    return resultado_final
 
 
 def generar_informe_periodo(caps, periodo_label, tipo, word_path, excel_path):
@@ -367,8 +375,10 @@ def generar_word(df_ins, df_mat, df_cert, resumen, nombre_cap, word_path):
     plt.tight_layout()
 
     graf_path = os.path.join(GENERATED_FOLDER, 'temp_graf_geo.png')
-    fig.savefig(graf_path, dpi=150, bbox_inches='tight')
+    fig.savefig(graf_path, dpi=90, bbox_inches='tight')
     plt.close(fig)
+    plt.close('all')
+    gc.collect()
 
     doc.add_picture(graf_path, width=Inches(5.8))
     doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -383,6 +393,7 @@ Otros partidos del GBA aportaron participación minoritaria pero significativa."
     doc.save(word_path)
     if os.path.exists(graf_path):
         os.remove(graf_path)
+    gc.collect()
 
 # ============================================================
 # RUTAS DE LA WEB
